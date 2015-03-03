@@ -49,4 +49,10 @@
     [self addChild:_spritePaddle];
 }
 
+-(void) addBricks {
+    for (<#initialization#>; <#condition#>; <#increment#>) {
+        <#statements#>
+    }
+}
+
 @end
