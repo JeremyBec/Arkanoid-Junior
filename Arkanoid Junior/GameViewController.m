@@ -9,25 +9,6 @@
 #import "GameViewController.h"
 #import "GameScene.h"
 
-@implementation SKScene (Unarchive)
-
-+ (instancetype)unarchiveFromFile:(NSString *)file {
-    /* Retrieve scene file path from the application bundle */
-    NSString *nodePath = [[NSBundle mainBundle] pathForResource:file ofType:@"sks"];
-    /* Unarchive the file to an SKScene object */
-    NSData *data = [NSData dataWithContentsOfFile:nodePath
-                                          options:NSDataReadingMappedIfSafe
-                                            error:nil];
-    NSKeyedUnarchiver *arch = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
-    [arch setClass:self forClassName:@"SKScene"];
-    SKScene *scene = [arch decodeObjectForKey:NSKeyedArchiveRootObjectKey];
-    [arch finishDecoding];
-    
-    return scene;
-}
-
-@end
-
 @implementation GameViewController
 
 - (void)viewDidLoad
@@ -42,11 +23,22 @@
     skView.ignoresSiblingOrder = YES;
     
     // Create and configure the scene.
-    GameScene *scene = [GameScene unarchiveFromFile:@"GameScene"];
-    scene.scaleMode = SKSceneScaleModeAspectFill;
+    SKScene *loadingScene = [[SKScene alloc] initWithSize:skView.bounds.size];
+    loadingScene.backgroundColor = [SKColor blackColor];
     
     // Present the scene.
-    [skView presentScene:scene];
+    [skView presentScene:loadingScene];
+}
+
+- (void) viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+    SKView * skView = (SKView *)self.view;
+    GameScene *scene = [GameScene sceneWithSize:skView.bounds.size];
+    
+    scene.scaleMode = SKSceneScaleModeAspectFill;
+    SKTransition *transition = [SKTransition fadeWithDuration:1];
+    [skView presentScene:scene transition: transition];
 }
 
 - (BOOL)shouldAutorotate

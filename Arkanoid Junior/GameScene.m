@@ -8,18 +8,18 @@
 
 #import "GameScene.h"
 
+
+@interface GameScene()
+
+@property SKSpriteNode *spritePaddle;
+
+@end
+
 @implementation GameScene
 
 -(void)didMoveToView:(SKView *)view {
     /* Setup your scene here */
-    SKLabelNode *myLabel = [SKLabelNode labelNodeWithFontNamed:@"Chalkduster"];
-    
-    myLabel.text = @"Hello, World!";
-    myLabel.fontSize = 65;
-    myLabel.position = CGPointMake(CGRectGetMidX(self.frame),
-                                   CGRectGetMidY(self.frame));
-    
-    [self addChild:myLabel];
+    [self addPaddle];
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -28,10 +28,8 @@
     for (UITouch *touch in touches) {
         CGPoint location = [touch locationInNode:self];
         
-        SKSpriteNode *sprite = [SKSpriteNode spriteNodeWithImageNamed:@"Spaceship"];
-        
-        sprite.xScale = 0.5;
-        sprite.yScale = 0.5;
+        SKSpriteNode *sprite = [SKSpriteNode spriteNodeWithImageNamed:@"paddle"];
+        NSLog(@"Position : %@", NSStringFromCGPoint(location));
         sprite.position = location;
         
         SKAction *action = [SKAction rotateByAngle:M_PI duration:1];
@@ -44,6 +42,15 @@
 
 -(void)update:(CFTimeInterval)currentTime {
     /* Called before each frame is rendered */
+}
+
+-(void) addPaddle {
+    _spritePaddle = [SKSpriteNode spriteNodeWithImageNamed:@"paddle"];
+    
+    CGPoint initialPosition = CGPointMake(74, 62);
+    _spritePaddle.position = initialPosition;
+    
+    [self addChild:_spritePaddle];
 }
 
 @end
