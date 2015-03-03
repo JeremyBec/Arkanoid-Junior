@@ -20,6 +20,7 @@
 -(void)didMoveToView:(SKView *)view {
     /* Setup your scene here */
     [self addPaddle];
+    [self addBricks];
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -50,8 +51,12 @@
 }
 
 -(void) addBricks {
-    for (<#initialization#>; <#condition#>; <#increment#>) {
-        <#statements#>
+    
+    for (int count = 0; count<=4; count++) {
+        SKSpriteNode *brickRed = [SKSpriteNode spriteNodeWithImageNamed:@"brick-red"];
+        CGPoint brickInitPoint = CGPointMake(10 + ((brickRed.size.width + 10) *count), 300);
+        brickRed.position = brickInitPoint;
+        [self addChild:brickRed];
     }
 }
 
