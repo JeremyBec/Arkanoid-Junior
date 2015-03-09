@@ -12,16 +12,28 @@
 @interface GameScene()
 
 @property SKSpriteNode *spritePaddle;
+@property SKSpriteNode *spriteBall;
+@property SKNode *bottomEdge;
+@property (nonatomic) BOOL isFingerOnPaddle;
 
 @end
+
+// categoryBitMasks. Permet de définir à quelle categorie un body appartiens.
+static const uint32_t ballCategory  = 0x1 << 0;  // 00000000000000000000000000000001
+static const uint32_t bottomCategory = 0x1 << 1; // 00000000000000000000000000000010
+static const uint32_t blockCategory = 0x1 << 2;  // 00000000000000000000000000000100
+static const uint32_t paddleCategory = 0x1 << 3; // 00000000000000000000000000001000
 
 @implementation GameScene
 
 -(void)didMoveToView:(SKView *)view {
-    /* Setup de notre scène */
+    /* Appels de nos méthodes */
     [self addPaddle];
     [self addBricks];
     [self addBall];
+    [self addBottom];
+    
+    self.physicsWorld.contactDelegate = self;
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -36,6 +48,10 @@
     
     if(location.x > _spritePaddle.size.width/2 && location.x < self.size.width - _spritePaddle.size.width/2)
         _spritePaddle.position = location;
+}
+
+-(void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event {
+    self.isFingerOnPaddle = NO;
 }
 
 -(void)update:(CFTimeInterval)currentTime {
@@ -56,6 +72,9 @@
     _spritePaddle.physicsBody.friction = 0.4f;
     // Rendre le physicsBody static
     _spritePaddle.physicsBody.dynamic = NO;
+    
+    // Definition des bitmasks
+    _spritePaddle.physicsBody.categoryBitMask = paddleCategory;
 }
 
 -(void) addBricks {
@@ -74,20 +93,63 @@
 
 -(void) addBall {
     // Création de la balle
-    SKSpriteNode *ball = [SKSpriteNode spriteNodeWithImageNamed:@"ball"];
+    _spriteBall = [SKSpriteNode spriteNodeWithImageNamed:@"ball"];
     CGPoint ballStartingPoint = CGPointMake(self.size.width/2, 200);
-    ball.position = ballStartingPoint;
-    [self addChild:ball];
+    _spriteBall.position = ballStartingPoint;
     
-    // Ajout d'un body "physique" à notre balle
-    ball.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:ball.frame.size.width/2];
+    // Ajout d'un corsp physique à notre balle
+    _spriteBall.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:_spriteBall.frame.size.width/2];
     // Desactiver la friction sur notre balle
-    ball.physicsBody.friction = 0.0f;
+    _spriteBall.physicsBody.friction = 0.0f;
     // Définir la restitution. La balle rebondira avec autant de force que l'impact
-    ball.physicsBody.restitution = 1.0f;
+    _spriteBall.physicsBody.restitution = 1.0f;
     // Simule une friction de l'air, notre balle ne veut pas être ralentie lorsqu'elle bouge.
-    ball.physicsBody.linearDamping = 0.0f;
-    ball.physicsBody.allowsRotation = NO;
+    _spriteBall.physicsBody.linearDamping = 0.0f;
+    _spriteBall.physicsBody.allowsRotation = NO;
+    
+    //Définition des bitmasks
+    _spriteBall.physicsBody.categoryBitMask = ballCategory;
+    _spriteBall.physicsBody.contactTestBitMask = bottomCategory;
+    
+    [self addChild:_spriteBall];
+    
+    
+}
+
+-(void) addBottom {
+    // Ajout du rectangle pour detection de l'écran gameover
+    CGRect bottomRect = CGRectMake(self.frame.origin.x, self.frame.origin.y, self.frame.size.width, 1);
+    _bottomEdge = [SKNode node];
+    // Ajout d'un corps physique pour pouvoir détecter le contact avec la balle
+    _bottomEdge.physicsBody = [SKPhysicsBody bodyWithEdgeLoopFromRect:bottomRect];
+    
+    //Définition des bitmasks
+    _bottomEdge.physicsBody.categoryBitMask = bottomCategory;
+    
+    [self addChild:_bottomEdge];
+}
+
+
+// Delegates
+
+-(void) didBeginContact:(SKPhysicsContact *)contact {
+    // Body pour pouvoir stocker les informations passées au delegate
+    SKPhysicsBody *firstBody;
+    SKPhysicsBody *secondBody;
+    
+    // Faire en sorte que l'objet qui possède la catégorie la plus faible soit toujours le premier Body
+    if (contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask) {
+        firstBody = contact.bodyA;
+        secondBody = contact.bodyB;
+    } else {
+        firstBody = contact.bodyB;
+        secondBody = contact.bodyA;
+    }
+    
+    // Permet de gérer l'écran du Game Over
+    if (firstBody.categoryBitMask == ballCategory && secondBody.categoryBitMask == bottomCategory) {
+        NSLog(@"La balle à touché le sol");
+    }
 }
 
 @end
