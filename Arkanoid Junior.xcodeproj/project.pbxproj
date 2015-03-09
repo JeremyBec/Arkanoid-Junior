@@ -422,6 +422,7 @@
 				5D50C6231AA6059B00222C05 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		5D50C6241AA6059B00222C05 /* Build configuration list for PBXNativeTarget "Arkanoid JuniorTests" */ = {
 			isa = XCConfigurationList;
@@ -430,6 +431,7 @@
 				5D50C6261AA6059B00222C05 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

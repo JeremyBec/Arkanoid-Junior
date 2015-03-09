@@ -35,7 +35,7 @@
     
     SKView * skView = (SKView *)self.view;
     GameScene *scene = [GameScene sceneWithSize:skView.bounds.size];
-    scene.backgroundColor = [SKColor whiteColor];
+    scene.backgroundColor = [SKColor darkGrayColor];
     
     scene.scaleMode = SKSceneScaleModeAspectFill;
     SKTransition *transition = [SKTransition fadeWithDuration:1];

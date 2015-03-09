@@ -21,6 +21,7 @@
     /* Setup your scene here */
     [self addPaddle];
     [self addBricks];
+    [self addBall];
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -51,13 +52,22 @@
 }
 
 -(void) addBricks {
-    
-    for (int count = 0; count<=4; count++) {
-        SKSpriteNode *brickRed = [SKSpriteNode spriteNodeWithImageNamed:@"brick-red"];
-        CGPoint brickInitPoint = CGPointMake(10 + ((brickRed.size.width + 10) *count), 300);
-        brickRed.position = brickInitPoint;
-        [self addChild:brickRed];
+    for (int count2 = 0; count2 < 3; count2++)
+    {
+        for (int count = 0; count<=3; count++) {
+            SKSpriteNode *brickRed = [SKSpriteNode spriteNodeWithImageNamed:@"brick-red"];
+            CGPoint brickInitPoint = CGPointMake((brickRed.size.width/2)+ 30 + ((brickRed.size.width + 10) *count), 400 + ((brickRed.size.height + 30) * count2));
+            brickRed.position = brickInitPoint;
+            [self addChild:brickRed];
+        }
     }
+}
+
+-(void) addBall {
+    SKSpriteNode *ball = [SKSpriteNode spriteNodeWithImageNamed:@"ball"];
+    CGPoint ballStartingPoint = CGPointMake(self.size.width/2, 200);
+    ball.position = ballStartingPoint;
+    [self addChild:ball];
 }
 
 @end
