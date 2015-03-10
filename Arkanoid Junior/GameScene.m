@@ -34,6 +34,7 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     [self addBorders];
     
     self.physicsWorld.contactDelegate = self;
+    self.physicsWorld.gravity = CGVectorMake(0.0f, 0.0f);
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -79,14 +80,13 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     {
         for (int count = 0; count<=3; count++) {
             SKSpriteNode *brickRed = [SKSpriteNode spriteNodeWithImageNamed:@"brick-red"];
-            CGPoint brickInitPoint = CGPointMake((brickRed.size.width/2)+ 30 + ((brickRed.size.width + 10) *count), 200 + ((brickRed.size.height + 30) * count2));
+            CGPoint brickInitPoint = CGPointMake((brickRed.size.width/2)+ 30 + ((brickRed.size.width + 10) *count), 300 + ((brickRed.size.height + 30) * count2));
             brickRed.position = brickInitPoint;
-            brickRed.name = [NSString stringWithFormat:@"brick%i", count];
             
             brickRed.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:brickRed.frame.size];
             brickRed.physicsBody.allowsRotation = NO;
             brickRed.physicsBody.friction = 0.0f;
-            brickRed.physicsBody.dynamic = NO;
+            //brickRed.physicsBody.dynamic = NO;
             
             //Définitiondes bitmasks
             brickRed.physicsBody.categoryBitMask = brickCategory;
@@ -119,6 +119,8 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     _spriteBall.physicsBody.contactTestBitMask = bottomCategory | brickCategory;
     
     [self addChild:_spriteBall];
+    
+    [_spriteBall.physicsBody applyImpulse:CGVectorMake(5.0f, -5.0f)];
     
     
 }
@@ -170,5 +172,6 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
         NSLog(@"La balle à touché une brique");
     }
 }
+
 
 @end
