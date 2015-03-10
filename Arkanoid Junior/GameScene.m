@@ -14,14 +14,13 @@
 @property SKSpriteNode *spritePaddle;
 @property SKSpriteNode *spriteBall;
 @property SKNode *bottomEdge;
-@property (nonatomic) BOOL isFingerOnPaddle;
 
 @end
 
 // categoryBitMasks. Permet de définir à quelle categorie un body appartiens.
 static const uint32_t ballCategory  = 0x1 << 0;  // 00000000000000000000000000000001
 static const uint32_t bottomCategory = 0x1 << 1; // 00000000000000000000000000000010
-static const uint32_t blockCategory = 0x1 << 2;  // 00000000000000000000000000000100
+static const uint32_t brickCategory = 0x1 << 2;  // 00000000000000000000000000000100
 static const uint32_t paddleCategory = 0x1 << 3; // 00000000000000000000000000001000
 
 @implementation GameScene
@@ -32,6 +31,7 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     [self addBricks];
     [self addBall];
     [self addBottom];
+    [self addBorders];
     
     self.physicsWorld.contactDelegate = self;
 }
@@ -50,10 +50,6 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
         _spritePaddle.position = location;
 }
 
--(void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event {
-    self.isFingerOnPaddle = NO;
-}
-
 -(void)update:(CFTimeInterval)currentTime {
     /* Called before each frame is rendered */
 }
@@ -65,8 +61,6 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     CGPoint initialPosition = CGPointMake(self.size.width/2, 62);
     _spritePaddle.position = initialPosition;
     _spritePaddle.name = @"paddle";
-    [self addChild:_spritePaddle];
-    
     _spritePaddle.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:_spritePaddle.frame.size];
     _spritePaddle.physicsBody.restitution = 0.1f;
     _spritePaddle.physicsBody.friction = 0.4f;
@@ -75,6 +69,8 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     
     // Definition des bitmasks
     _spritePaddle.physicsBody.categoryBitMask = paddleCategory;
+    
+    [self addChild:_spritePaddle];
 }
 
 -(void) addBricks {
@@ -83,9 +79,18 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     {
         for (int count = 0; count<=3; count++) {
             SKSpriteNode *brickRed = [SKSpriteNode spriteNodeWithImageNamed:@"brick-red"];
-            CGPoint brickInitPoint = CGPointMake((brickRed.size.width/2)+ 30 + ((brickRed.size.width + 10) *count), 400 + ((brickRed.size.height + 30) * count2));
+            CGPoint brickInitPoint = CGPointMake((brickRed.size.width/2)+ 30 + ((brickRed.size.width + 10) *count), 200 + ((brickRed.size.height + 30) * count2));
             brickRed.position = brickInitPoint;
             brickRed.name = [NSString stringWithFormat:@"brick%i", count];
+            
+            brickRed.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:brickRed.frame.size];
+            brickRed.physicsBody.allowsRotation = NO;
+            brickRed.physicsBody.friction = 0.0f;
+            brickRed.physicsBody.dynamic = NO;
+            
+            //Définitiondes bitmasks
+            brickRed.physicsBody.categoryBitMask = brickCategory;
+            
             [self addChild:brickRed];
         }
     }
@@ -107,9 +112,11 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     _spriteBall.physicsBody.linearDamping = 0.0f;
     _spriteBall.physicsBody.allowsRotation = NO;
     
+    
+    
     //Définition des bitmasks
     _spriteBall.physicsBody.categoryBitMask = ballCategory;
-    _spriteBall.physicsBody.contactTestBitMask = bottomCategory;
+    _spriteBall.physicsBody.contactTestBitMask = bottomCategory | brickCategory;
     
     [self addChild:_spriteBall];
     
@@ -127,6 +134,12 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     _bottomEdge.physicsBody.categoryBitMask = bottomCategory;
     
     [self addChild:_bottomEdge];
+}
+
+-(void) addBorders {
+    SKPhysicsBody *borderBody = [SKPhysicsBody bodyWithEdgeLoopFromRect:self.frame];
+    self.physicsBody = borderBody;
+    self.physicsBody.friction = 0.0f;
 }
 
 
@@ -149,6 +162,12 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     // Permet de gérer l'écran du Game Over
     if (firstBody.categoryBitMask == ballCategory && secondBody.categoryBitMask == bottomCategory) {
         NSLog(@"La balle à touché le sol");
+    }
+    
+    // Permet de vérifier le contact entre la balle et les bricks
+    if (firstBody.categoryBitMask == ballCategory && secondBody.categoryBitMask == brickCategory) {
+        [secondBody.node removeFromParent];
+        NSLog(@"La balle à touché une brique");
     }
 }
 
