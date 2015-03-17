@@ -53,6 +53,13 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
 
 -(void)update:(CFTimeInterval)currentTime {
     /* Called before each frame is rendered */
+    static int maxSpeed = 1000;
+    float speed = sqrt(_spriteBall.physicsBody.velocity.dx*_spriteBall.physicsBody.velocity.dx + _spriteBall.physicsBody.velocity.dy * _spriteBall.physicsBody.velocity.dy);
+    if (speed > maxSpeed) {
+        _spriteBall.physicsBody.linearDamping = 0.4f;
+    } else {
+        _spriteBall.physicsBody.linearDamping = 0.0f;
+    }
 }
 
 -(void) addPaddle {
