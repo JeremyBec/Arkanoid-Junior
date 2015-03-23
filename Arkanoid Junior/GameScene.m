@@ -7,13 +7,16 @@
 //
 
 #import "GameScene.h"
-
+#import "GameResultScene.h"
 
 @interface GameScene()
 
 @property SKSpriteNode *spritePaddle;
 @property SKSpriteNode *spriteBall;
 @property SKNode *bottomEdge;
+@property int heartNumber;
+@property int score;
+@property int brickRemaining;
 
 @end
 
@@ -29,12 +32,13 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     /* Appels de nos méthodes */
     [self addPaddle];
     [self addBricks];
+    [self addHearts];
     [self addBall];
     [self addBottom];
     [self addBorders];
     
     self.physicsWorld.contactDelegate = self;
-    self.physicsWorld.gravity = CGVectorMake(0.0f, 0.0f);
+    self.physicsWorld.gravity = CGVectorMake(0.0f, -0.5f);
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -53,13 +57,6 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
 
 -(void)update:(CFTimeInterval)currentTime {
     /* Called before each frame is rendered */
-    static int maxSpeed = 1000;
-    float speed = sqrt(_spriteBall.physicsBody.velocity.dx*_spriteBall.physicsBody.velocity.dx + _spriteBall.physicsBody.velocity.dy * _spriteBall.physicsBody.velocity.dy);
-    if (speed > maxSpeed) {
-        _spriteBall.physicsBody.linearDamping = 0.4f;
-    } else {
-        _spriteBall.physicsBody.linearDamping = 0.0f;
-    }
 }
 
 -(void) addPaddle {
@@ -87,26 +84,39 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     {
         for (int count = 0; count<=3; count++) {
             SKSpriteNode *brickRed = [SKSpriteNode spriteNodeWithImageNamed:@"brick-red"];
-            CGPoint brickInitPoint = CGPointMake((brickRed.size.width/2)+ 30 + ((brickRed.size.width + 10) *count), 300 + ((brickRed.size.height + 30) * count2));
+            CGPoint brickInitPoint = CGPointMake((brickRed.size.width/2)+ 30 + ((brickRed.size.width + 10) *count), 400 + ((brickRed.size.height + 30) * count2));
             brickRed.position = brickInitPoint;
             
             brickRed.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:brickRed.frame.size];
             brickRed.physicsBody.allowsRotation = NO;
             brickRed.physicsBody.friction = 0.0f;
-            //brickRed.physicsBody.dynamic = NO;
+            brickRed.physicsBody.dynamic = NO;
             
             //Définitiondes bitmasks
             brickRed.physicsBody.categoryBitMask = brickCategory;
             
+            _brickRemaining ++;
             [self addChild:brickRed];
         }
     }
 }
 
+-(void) addHearts {
+    _heartNumber = 5;
+    for(int heartCount = 0; heartCount <=2; heartCount ++) {
+        SKSpriteNode *spriteHeart = [SKSpriteNode spriteNodeWithImageNamed:@"heart"];
+        CGPoint heartPosition = CGPointMake(((self.frame.size.width-30)-(spriteHeart.size.width + 30)*heartCount), self.frame.size.height-30);
+        spriteHeart.position = heartPosition;
+        
+        [self addChild:spriteHeart];
+    }
+    
+}
+
 -(void) addBall {
     // Création de la balle
     _spriteBall = [SKSpriteNode spriteNodeWithImageNamed:@"ball"];
-    CGPoint ballStartingPoint = CGPointMake(self.size.width/2, 200);
+    CGPoint ballStartingPoint = CGPointMake(self.size.width/2, 130);
     _spriteBall.position = ballStartingPoint;
     
     // Ajout d'un corsp physique à notre balle
@@ -119,15 +129,14 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     _spriteBall.physicsBody.linearDamping = 0.0f;
     _spriteBall.physicsBody.allowsRotation = NO;
     
-    
-    
+   
     //Définition des bitmasks
     _spriteBall.physicsBody.categoryBitMask = ballCategory;
     _spriteBall.physicsBody.contactTestBitMask = bottomCategory | brickCategory;
     
     [self addChild:_spriteBall];
     
-    [_spriteBall.physicsBody applyImpulse:CGVectorMake(5.0f, -5.0f)];
+    [_spriteBall.physicsBody applyImpulse:CGVectorMake(1.0f, -5.0f)];
     
     
 }
@@ -136,7 +145,7 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     // Ajout du rectangle pour detection de l'écran gameover
     CGRect bottomRect = CGRectMake(self.frame.origin.x, self.frame.origin.y, self.frame.size.width, 1);
     _bottomEdge = [SKNode node];
-    // Ajout d'un corps physique pour pouvoir détecter le contact avec la balle
+    // Ajout d'un corps physique pour pouvoir détecter le contact avec la balle
     _bottomEdge.physicsBody = [SKPhysicsBody bodyWithEdgeLoopFromRect:bottomRect];
     
     //Définition des bitmasks
@@ -151,6 +160,19 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     self.physicsBody.friction = 0.0f;
 }
 
+-(BOOL) isGameWon {
+    if(_brickRemaining == 0) {
+        return YES;
+    } else {
+        return NO;
+    }
+}
+
+-(void) presentResultScene:(BOOL) playerWon {
+    GameResultScene *gameResultScene = [[GameResultScene alloc] initWithSize:self.frame.size playerWon:playerWon];
+    SKTransition *crossFade = [SKTransition crossFadeWithDuration:1.0f];
+    [self.view presentScene:gameResultScene transition:crossFade];
+}
 
 // Delegates
 
@@ -171,12 +193,25 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     // Permet de gérer l'écran du Game Over
     if (firstBody.categoryBitMask == ballCategory && secondBody.categoryBitMask == bottomCategory) {
         NSLog(@"La balle à touché le sol");
+        if (_heartNumber > 0) {
+            _heartNumber --;
+            [firstBody.node removeFromParent];
+            [self addBall];
+            NSLog(@"Il vous reste %d coeur", _heartNumber);
+        } else {
+            [self presentResultScene:NO];
+        }
     }
     
     // Permet de vérifier le contact entre la balle et les bricks
     if (firstBody.categoryBitMask == ballCategory && secondBody.categoryBitMask == brickCategory) {
         [secondBody.node removeFromParent];
-        NSLog(@"La balle à touché une brique");
+        _brickRemaining --;
+        _score += 10;
+        NSLog(@"Votre score est de %d", _score);
+        if([self isGameWon]) {
+            [self presentResultScene:YES];
+        }
     }
 }
 

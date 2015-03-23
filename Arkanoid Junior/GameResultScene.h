@@ -6,8 +6,10 @@
 //  Copyright (c) 2015 JeremyBec. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import <SpriteKit/SpriteKit.h>
 
-@interface GameResultScene : NSObject
+@interface GameResultScene : SKScene
+
+-(id)initWithSize:(CGSize)size playerWon:(BOOL)isWon;
 
 @end
