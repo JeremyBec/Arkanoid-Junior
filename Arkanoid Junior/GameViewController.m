@@ -8,6 +8,7 @@
 
 #import "GameViewController.h"
 #import "GameScene.h"
+#import "GameResultScene.h"
 
 @implementation GameViewController
 
@@ -22,24 +23,21 @@
     /* Sprite Kit applies additional optimizations to improve rendering performance */
     skView.ignoresSiblingOrder = YES;
     
-    // Create and configure the scene.
-    SKScene *loadingScene = [[SKScene alloc] initWithSize:skView.bounds.size];
-    loadingScene.backgroundColor = [SKColor blackColor];
+    GameResultScene * menuScene = [[GameResultScene alloc]initWithSize:skView.bounds.size];
+    SKTransition *crossFade = [SKTransition crossFadeWithDuration:1.0f];
+    [skView presentScene:menuScene transition:crossFade];
     
-    // Present the scene.
-    [skView presentScene:loadingScene];
+    
+    // Create and configure the scene.
+//    SKScene *loadingScene = [[SKScene alloc] initWithSize:skView.bounds.size];
+//    loadingScene.backgroundColor = [SKColor blackColor];
+//    
+//    // Present the scene.
+//    [skView presentScene:loadingScene];
 }
 
 - (void) viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-    
-    SKView * skView = (SKView *)self.view;
-    GameScene *scene = [GameScene sceneWithSize:skView.bounds.size];
-    scene.backgroundColor = [SKColor darkGrayColor];
-    
-    scene.scaleMode = SKSceneScaleModeAspectFill;
-    SKTransition *transition = [SKTransition fadeWithDuration:1];
-    [skView presentScene:scene transition: transition];
 }
 
 - (BOOL)shouldAutorotate

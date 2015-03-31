@@ -8,8 +8,11 @@
 
 #import <SpriteKit/SpriteKit.h>
 
-@interface GameResultScene : SKScene
+@interface GameResultScene : SKScene<SKPhysicsContactDelegate>
+
+@property SKLabelNode* gameResultLabel;
 
 -(id)initWithSize:(CGSize)size playerWon:(BOOL)isWon;
+-(id)initWithSize:(CGSize)size;
 
 @end

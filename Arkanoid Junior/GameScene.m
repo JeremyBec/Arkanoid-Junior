@@ -15,8 +15,9 @@
 @property SKSpriteNode *spriteBall;
 @property SKNode *bottomEdge;
 @property int heartNumber;
-@property int score;
 @property int brickRemaining;
+@property BOOL contactFinished;
+@property NSMutableArray* heartArray;
 
 @end
 
@@ -39,6 +40,7 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
     
     self.physicsWorld.contactDelegate = self;
     self.physicsWorld.gravity = CGVectorMake(0.0f, -0.5f);
+    _contactFinished = NO;
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -103,11 +105,12 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
 
 -(void) addHearts {
     _heartNumber = 5;
-    for(int heartCount = 0; heartCount <=2; heartCount ++) {
+    _heartArray = [[NSMutableArray alloc]init];
+    for(int heartCount = 0; heartCount <=_heartNumber; heartCount ++) {
         SKSpriteNode *spriteHeart = [SKSpriteNode spriteNodeWithImageNamed:@"heart"];
         CGPoint heartPosition = CGPointMake(((self.frame.size.width-30)-(spriteHeart.size.width + 30)*heartCount), self.frame.size.height-30);
         spriteHeart.position = heartPosition;
-        
+        [_heartArray addObject:spriteHeart];
         [self addChild:spriteHeart];
     }
     
@@ -169,50 +172,80 @@ static const uint32_t paddleCategory = 0x1 << 3; // 0000000000000000000000000000
 }
 
 -(void) presentResultScene:(BOOL) playerWon {
+    
     GameResultScene *gameResultScene = [[GameResultScene alloc] initWithSize:self.frame.size playerWon:playerWon];
+    gameResultScene.userData = [NSMutableDictionary dictionary];
+    NSNumber *scoreResult = [NSNumber numberWithInt:_score];
+    [gameResultScene.userData setObject:scoreResult forKey:@"score"];
     SKTransition *crossFade = [SKTransition crossFadeWithDuration:1.0f];
     [self.view presentScene:gameResultScene transition:crossFade];
+}
+
+- (void)ResetBallAndHeart:(SKPhysicsBody *)firstBody {
+    if (_contactFinished == YES) {
+        // Supprimer la balle
+        [firstBody.node removeFromParent];
+        
+        // Supprimer le coeur
+        _heartNumber -= 1;
+        SKSpriteNode *heartToDelete = [_heartArray lastObject];
+        [_heartArray removeLastObject];
+        [heartToDelete removeFromParent];
+        
+        // Afficher la balle et reset le bool de collision
+        [self performSelector:@selector(addBall) withObject:nil afterDelay:0.5];
+        NSLog(@"Il vous reste %d coeur", _heartNumber);
+        [self performSelector:@selector(setContactBoolStatus) withObject:nil afterDelay:0.05];
+    }
+    
+}
+
+-(void) setContactBoolStatus {
+    _contactFinished = NO;
 }
 
 // Delegates
 
 -(void) didBeginContact:(SKPhysicsContact *)contact {
-    // Body pour pouvoir stocker les informations passées au delegate
-    SKPhysicsBody *firstBody;
-    SKPhysicsBody *secondBody;
-    
-    // Faire en sorte que l'objet qui possède la catégorie la plus faible soit toujours le premier Body
-    if (contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask) {
-        firstBody = contact.bodyA;
-        secondBody = contact.bodyB;
-    } else {
-        firstBody = contact.bodyB;
-        secondBody = contact.bodyA;
-    }
-    
-    // Permet de gérer l'écran du Game Over
-    if (firstBody.categoryBitMask == ballCategory && secondBody.categoryBitMask == bottomCategory) {
-        NSLog(@"La balle à touché le sol");
-        if (_heartNumber > 0) {
-            _heartNumber --;
-            [firstBody.node removeFromParent];
-            [self addBall];
-            NSLog(@"Il vous reste %d coeur", _heartNumber);
+    if(_contactFinished == NO) {
+        // Body pour pouvoir stocker les informations passées au delegate
+        SKPhysicsBody *firstBody;
+        SKPhysicsBody *secondBody;
+        
+        // Faire en sorte que l'objet qui possède la catégorie la plus faible soit toujours le premier Body
+        if (contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask) {
+            firstBody = contact.bodyA;
+            secondBody = contact.bodyB;
         } else {
-            [self presentResultScene:NO];
+            firstBody = contact.bodyB;
+            secondBody = contact.bodyA;
         }
+        
+        // Permet de gérer l'écran du Game Over
+        if (firstBody.categoryBitMask == ballCategory && secondBody.categoryBitMask == bottomCategory) {
+            _contactFinished = YES;
+            //NSLog(@"La balle à touché le sol");
+            if (_heartNumber > 0) {
+                [self ResetBallAndHeart:firstBody];
+            } else {
+                [self presentResultScene:NO];
+            }
+        }
+        
+        // Permet de vérifier le contact entre la balle et les bricks
+        if (firstBody.categoryBitMask == ballCategory && secondBody.categoryBitMask == brickCategory) {
+            _contactFinished = YES;
+            [secondBody.node removeFromParent];
+            _brickRemaining --;
+            _score += 10;
+            NSLog(@"Votre score est de %d", _score);
+            if([self isGameWon]) {
+                [self presentResultScene:YES];
+            }
+            _contactFinished = NO;
+        }  
     }
     
-    // Permet de vérifier le contact entre la balle et les bricks
-    if (firstBody.categoryBitMask == ballCategory && secondBody.categoryBitMask == brickCategory) {
-        [secondBody.node removeFromParent];
-        _brickRemaining --;
-        _score += 10;
-        NSLog(@"Votre score est de %d", _score);
-        if([self isGameWon]) {
-            [self presentResultScene:YES];
-        }
-    }
 }
 
 

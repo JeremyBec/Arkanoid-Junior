@@ -10,4 +10,6 @@
 
 @interface GameScene : SKScene<SKPhysicsContactDelegate>
 
+@property int score;
+
 @end
